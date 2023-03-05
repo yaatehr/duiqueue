@@ -221,14 +221,22 @@ class DesignatedDriver(StateMachineBase):
             if log_counter % self.log_interval*3 == 0:
                 self.log_and_update(TaskState.IN_PROGRESS, f"{'A' if self.task_config.first_pass else 'B'} Subtask status: {self.subtask_state_dict.values()}")
                 for i,t in enumerate(task_list):
-                    if not self.subtask_state_dict[t[0]]:
+                    if (not self.subtask_state_dict[t[0]] 
+                    or (not self.task_config.first_pass and not (t[0] in self.output_dict.keys() and self.output_dict[t[0]] is not None and self.subtask_state_dict[t[0]]))):
                         self.queue.put(t)
-                    self.log_and_update(TaskState.IN_PROGRESS, f"replinishing job for {t[0]}")
+                        self.subtask_state_dict[t[0]] = False
+                        self.log_and_update(TaskState.IN_PROGRESS, f"replinishing job for {t[0]}")
                 self.submit_progress_update_to_server(round_no)
                 
             if DEBUG_MODE:
                 print(self.subtask_state_dict.values())
-            incomplete = not all(self.subtask_state_dict.values())
+            if self.task_config.first_pass:
+                incomplete = not all(self.subtask_state_dict.values())
+            else:
+                incomplete = False
+                for k,v in self.subtask_state_dict.items():
+                    if not (k in self.output_dict.keys() and self.output_dict[k] is not None and v):
+                        incomplete = True
             sleep(self.sleep_time)
             log_counter +=1
         self.log_and_update(TaskState.IN_PROGRESS, f"{'A' if self.task_config.first_pass else 'B'} subtasks complete")

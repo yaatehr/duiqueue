@@ -57,8 +57,6 @@ export default class App extends React.Component<AppProps, AppStates> {
                         <CustomComponents.TextComponent text="task id: "/><input onChange={e => this.setState({task_id: e.target.value})} placeholder={task_id}/><div/>
                         <CustomComponents.TextComponent text="Num Rounds: "/><input onChange={e => this.setState({num_rounds: e.target.value})} placeholder={num_rounds}/><div/>
                     </div>
-                    <CustomComponents.TextComponent text={`Output: ${this.state.output}`}/>
-                    <CustomComponents.TextComponent text={`Momentum: ${this.state.momentum}`}/>
                     {
                         pending_queue_request &&  <CustomComponents.PollingComponent callback={this.getProgress} progress={progress} />
                     }
