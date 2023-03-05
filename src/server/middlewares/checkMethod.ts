@@ -6,11 +6,11 @@ import path from '../route/path';
 export default (req: Request, res: Response, next: (param?: unknown) => void): void => {
     try{
         const base_url = req.url.split('?')[0];
-        console.log(req.url);
-        console.log(base_url);
+        // console.log(req.url);
+        // console.log(base_url);
         const route = path(base_url);
-        console.log(route.methods);
-        console.log(route.methods.includes(req.method))
+        // console.log(route.methods);
+        // console.log(route.methods.includes(req.method))
         if (route.methods.includes(req.method)) {
             next();   
         } else {

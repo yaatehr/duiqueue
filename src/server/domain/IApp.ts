@@ -1,14 +1,6 @@
 import {ITest} from "./ITest";
 import {IProgress} from "./IProgress";
 export interface AppStates {
-    username?: string;
-    textOfPostTest: string,
-    textForPost: string,
-    textOfPutTest: string,
-    textForPut: string,
-    textOfDeleteTest: string,
-    textForDelete: string,
-    response?: ITest,
     progress?: IProgress,
     W: string,
     F: string,
