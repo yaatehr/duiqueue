@@ -126,7 +126,7 @@ class MapReduceTaskConfig:
         self.C = C
         self.num_rounds =  num_rounds
         self.task_id = task_id or uuid.uuid4()
-        self.root_directory = os.path.join(root_directory, "tasks", self.task_id)
+        self.root_directory = os.path.join(root_directory, f"tasks/{self.task_id}")
         self.clear_task_root_directory()
         self.input_directory = os.path.join(self.root_directory, "inputs")
         self.max_subtasks_per_worker = max_subtasks_per_worker
@@ -150,8 +150,8 @@ class MapReduceTaskConfig:
 
 
 class StateMachineBase(Process):
-    def __init__(self, task_config, state_machine_id, sleep_time=DEFAULT_SLEEP_SECONDS):
-        super().__init__()
+    def __init__(self, task_config, state_machine_id, sleep_time=DEFAULT_SLEEP_SECONDS, args=None):
+        super(StateMachineBase, self).__init__(args=args or ())
         self.state = TaskState.NOT_STARTED
         self.log_directory = os.path.join(task_config.root_directory, "worker_logs")
         self.state_machine_id = state_machine_id
@@ -178,14 +178,14 @@ class StateMachineBase(Process):
 
 class DesignatedDriver(StateMachineBase):
     def __init__(self, task_config, manager):
-        super().__init__(task_config, "DesignatedDriver")
-        self.task_config = task_config
-        self.log_and_update(TaskState.NOT_STARTED)
         self.manager = manager
         self.queue = self.manager.Queue()
         self.subtask_state_dict = self.manager.dict()
         self.output_dict =self.manager.dict()
         self.filesystem_lock = self.manager.Lock()
+        super(DesignatedDriver, self).__init__(task_config, "DesignatedDriver", args=(self.queue, self.subtask_state_dict, self.output_dict, self.filesystem_lock))
+        self.task_config = task_config
+        self.log_and_update(TaskState.NOT_STARTED)
         self.workers = None
         self.spawn_workers(task_config)
         self.log_and_update(TaskState.IN_PROGRESS, "finish __init__, starting main loop")
@@ -294,7 +294,7 @@ class DesignatedDriver(StateMachineBase):
 
 class BackseatDriver(StateMachineBase):
     def __init__(self, task_config, id, queue, subtask_state_dict, output_dict, filesystem_lock):
-        super().__init__(task_config, f"BackseatDriver{id}")
+        super().__init__(task_config, f"BackseatDriver{id}", args=(task_config, queue, subtask_state_dict, output_dict, filesystem_lock))
         self.task_config = task_config
         self.queue = queue
         self.subtask_state_dict = subtask_state_dict
@@ -353,7 +353,7 @@ class BackseatDriver(StateMachineBase):
 if __name__ == '__main__':
     # load arguments
     [F, W, C, task_id, num_rounds] = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5])]
-    freeze_support()
+    # freeze_support()
     # W = 2
     # F = 2
     # C = 2
